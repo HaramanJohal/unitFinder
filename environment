@@ -1,1 +1,2 @@
 export PYTHONDONTWRITEBYTECODE="no byte code, thank you"
+export DATA_DELIMITER=" :|: "

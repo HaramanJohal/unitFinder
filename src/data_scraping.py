@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup as bs
 
@@ -25,12 +26,29 @@ def get_bbc_urls():
     response = requests.get(BBC_NEWS_URL)
     soup = bs(response.content, "html.parser")
     links = soup.find_all("a")
-    return [BBC_HOMEPAGE_URL + l["href"] for l in links if is_article_href(l["href"])]
+    return set([BBC_HOMEPAGE_URL + l["href"] for l in links if is_article_href(l["href"])])
+
+
+def extract_number(input_string):
+    words = input_string.split(" ")
+    numbers = []
+    for i, word in enumerate(words):
+        if contains_number(word):
+            if i < len(words) - 1 and "illion" in words[i + 1]:
+                numbers.append((word + " " + words[i + 1], i))
+            else:
+                numbers.append((word, i))
+    return numbers
 
 
 if __name__ == "__main__":
-    with open("data/testData.txt", "w") as f:
+    delimiter = os.environ["DATA_DELIMITER"]
+
+    with open("data/scrapedData.txt", "a") as f:
         for url in get_bbc_urls():
             print(f"Processing: {url}")
             for para in get_numeric_paragraphs_from_url(url):
-                f.write(f"{para}\n")
+                numbers = extract_number(para)
+                for (number, index) in numbers:
+                    text = para.replace("\n", "")
+                    f.write(f"{index}{delimiter}{number}{delimiter}{text}\n")
